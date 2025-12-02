@@ -1,0 +1,629 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Review Snapshot Übersicht</title>
+  <style>
+  body {
+    margin: 0;
+    padding: 32px;
+    background: #f5f5f7;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    color: #111827;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto 40px;
+  }
+
+  /* Karten – „Flat + 3D-Border“ Variante, gut für PDF */
+  .card {
+    background: #ffffff;
+    border-radius: 24px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+
+  .card-section {
+    background: #ffffff;
+    border-radius: 18px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  /* Header mit leichtem Schatten */
+  .header-card {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 40%, #f97316 100%);
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    border: none;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.22);
+  }
+
+  .header-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .header-pill-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.18;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(255,255,255,0.7) 0, transparent 55%),
+      radial-gradient(circle at 100% 100%, rgba(255,255,255,0.4) 0, transparent 55%);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(15,23,42,0.35);
+  }
+
+  .header-icon-inner {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .header-star {
+    color: #ff7a64;         /* Branding-Farbe */
+    transform: translateY(-1px); /* nur Stern 1px nach oben */
+    display: inline-block;
+  }
+
+  .header-title {
+    font-size: 24px;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+
+  .header-subtitle {
+    font-size: 14px;
+    opacity: 0.92;
+  }
+
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.5);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #22c55e;
+  }
+
+  /* KPI Row – 3 Karten mit leicht farbiger Hinterlegung */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .kpi-card {
+    border-radius: 16px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 16px 18px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .kpi-card.rating {
+    background: #fefce8; /* leicht gelb */
+  }
+
+  .kpi-card.period {
+    background: #eff6ff; /* leicht blau */
+  }
+
+  .kpi-card.sentiment {
+    background: #f5f3ff; /* leicht lila */
+  }
+
+  .kpi-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .kpi-icon.rating { background:#fef3c7; color:#f59e0b; }
+  .kpi-icon.period { background:#e0f2fe; color:#0284c7; }
+  .kpi-icon.sentiment { background:#ede9fe; color:#a855f7; }
+
+  .kpi-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #6b7280;
+    letter-spacing: 0.06em;
+  }
+
+  .kpi-value {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .kpi-sub {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  /* Progress Bar (Sentiment) – wieder aktiv */
+  .progress-wrapper {
+    margin-top: 6px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    height: 8px;
+  }
+
+  .progress-inner {
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+    width: 0; /* wird per Inline-Style gesetzt */
+    max-width: 100%;
+  }
+
+  /* Section headings */
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .section-title span.icon {
+    margin-right: 6px;
+  }
+
+  .section-subtitle {
+    font-size: 12px;
+    color: #4b5563;
+    margin-bottom: 12px;
+    font-weight: 600; /* fett */
+  }
+
+  /* Reviewer Insights */
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+    gap: 12px;
+  }
+
+  .insight-box {
+    background: #f9fafb;
+    border-radius: 14px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 12px 14px;
+  }
+
+  .insight-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  .insight-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+  }
+
+  .insight-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .insight-list li {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .lang-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .lang-pill {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    color: #374151;
+  }
+
+  /* Key Themes / Opportunities Pills */
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .pill {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid rgba(79,70,229,0.2);
+  }
+
+  /* Positive / Improvement */
+  .columns-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+    gap: 16px;
+  }
+
+  .pos-card {
+    background: #ecfdf3;
+    border-radius: 18px;
+    border-top: 1px solid #bbf7d0;
+    border-left: 1px solid #bbf7d0;
+    border-right: 2px solid #4ade80;
+    border-bottom: 2px solid #4ade80;
+    padding: 16px 18px;
+  }
+
+  .neg-card {
+    background: #fef2f2;
+    border-radius: 18px;
+    border-top: 1px solid #fecaca;
+    border-left: 1px solid #fecaca;
+    border-right: 2px solid #f97373;
+    border-bottom: 2px solid #f97373;
+    padding: 16px 18px;
+  }
+
+    .list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+  }
+
+  .list li {
+    font-size: 13px;
+    padding: 6px 0;
+    display: flex;
+    align-items: center;      /* Mitte vertikal */
+    gap: 10px;
+  }
+
+  .list-bullet {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  /* grüne Punkte für Positive Aspekte */
+  .list-bullet.pos {
+    background: #22c55e;
+  }
+
+  /* rote Punkte für Negative Aspekte */
+  .list-bullet.neg {
+    background: #f97373;
+  }
+
+  /* Opportunities as pills */
+  .op-pill {
+    display: inline-block;
+    margin: 4px 6px 4px 0;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid rgba(79,70,229,0.25);
+  }
+
+  /* Reviews */
+  .review-card {
+    border-radius: 18px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    background: #f9fafb;
+  }
+
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .stars {
+    color: #f59e0b;
+    margin-right: 4px;
+  }
+
+  .review-author {
+    font-weight: 500;
+    color: #111827;
+  }
+
+  .review-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #111827;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 5px;
+  }
+
+  .footer a {
+    color: #4f46e5;
+    text-decoration: none;
+    font-size: 12px; 
+  }
+
+  .footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width:640px) {
+    body { padding:16px; }
+    .card, .card-section { padding:18px 16px; }
+    .header-top { flex-direction:column; align-items:flex-start; }
+    .kpi-row { grid-template-columns:1fr; }
+  }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <div class="card header-card">
+      <div class="header-pill-bg"></div>
+      <div class="header-inner">
+        <div class="header-top">
+          <div class="header-left">
+            <div class="header-icon">
+              <div class="header-icon-inner">
+                <span class="header-star">★</span>
+              </div>
+            </div>
+            <div>
+              <div class="header-title">Review Snapshot Übersicht</div>
+              <div class="header-subtitle">
+                Umfassende Analyse für HafenKunstKino
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="badge-row">
+          <span class="badge">
+            <span class="badge-dot"></span>
+            <span>Platz der Medien, Zollhof 13, 40221 Düsseldorf</span>
+          </span>
+          <span class="badge">
+            🏷 <span>Kino</span>
+          </span>
+          <span class="badge">
+            🔍 <span>Quelle: Google Reviews</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI ROW -->
+    <div class="card-section">
+      <div class="kpi-row">
+        <div class="kpi-card rating">
+          <div class="kpi-icon rating">★</div>
+          <div class="kpi-text">
+            <div class="kpi-label">Durchschnittliche Bewertung</div>
+            <div class="kpi-value">5.0 / 5</div>
+            <div class="kpi-sub">2 Bewertungen insgesamt</div>
+          </div>
+        </div>
+
+        <div class="kpi-card period">
+          <div class="kpi-icon period">📅</div>
+          <div class="kpi-text">
+            <div class="kpi-label">Zeitraum</div>
+            <div class="kpi-value">Seit 2020</div>
+            <div class="kpi-sub">Alle verfügbaren Bewertungen</div>
+          </div>
+        </div>
+
+        <div class="kpi-card sentiment">
+          <div class="kpi-icon sentiment">📊</div>
+          <div class="kpi-text" style="width:100%;">
+            <div class="kpi-label">Gesamtstimmung</div>
+            <div class="kpi-value">Positive</div>
+            <div class="kpi-sub">100% positiv</div>
+            <div class="progress-wrapper">
+              <div class="progress-inner" style="width:100%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVIEWER INSIGHTS -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">👤</span>Reviewer-Insights</div>
+      <div class="section-subtitle">Verständnis der Rezensenten</div>
+      <div class="insights-grid">
+        <div class="insight-box">
+          <div class="insight-label">Durchschnittliche Textlänge</div>
+          <div class="insight-value">Short</div>
+        </div>
+        <div class="insight-box">
+          <div class="insight-label">Top Rezensenten-Typen</div>
+          <ul class="insight-list">
+            <li>Allgemeine Besucher</li>
+          </ul>
+        </div>
+        <div class="insight-box">
+          <div class="insight-label">Sprachen</div>
+          <div class="lang-pills">
+            <span class="lang-pill">Deutsch</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEY THEMES -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">💬</span>Kern-Themen</div>
+      <div class="section-subtitle">Am häufigsten erwähnte Aspekte</div>
+      <div class="pill-row">
+        <span class="pill">Allgemeine Zufriedenheit</span><span class="pill">Positives Gesamterlebnis</span><span class="pill">Kultureller Ort</span>
+      </div>
+    </div>
+
+    <!-- POSITIVE / IMPROVEMENT -->
+    <div class="card-section">
+      <div class="columns-2">
+        <div class="pos-card">
+          <div class="section-title">👍 Positive Aspekte</div>
+          <div class="section-subtitle">Was Gäste besonders schätzen</div>
+          <ul class="list">
+            <li><span class="list-bullet pos"></span><span>Sehr gute Gesamtbewertung</span></li><li><span class="list-bullet pos"></span><span>Angenehmes Erlebnis</span></li><li><span class="list-bullet pos"></span><span>Zufriedene Besucher</span></li>
+          </ul>
+        </div>
+        <div class="neg-card">
+          <div class="section-title">👎 Verbesserungspotenziale</div>
+          <div class="section-subtitle">Ansätze zur Optimierung</div>
+          <ul class="list">
+            <li><span class="list-bullet neg"></span><span>Mehr ausführliche Rückmeldungen sammeln</span></li><li><span class="list-bullet neg"></span><span>Aktivere Kommunikation mit Gästen</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOMER EXPERIENCE OVERVIEW -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">🧭</span>Customer-Experience-Überblick</div>
+      <div class="section-subtitle">Stimmungslage und wiederkehrende Muster</div>
+      <p style="font-size:13px; line-height:1.6; color:#111827;">
+        Die Bewertungen fallen ausschließlich positiv aus, bieten jedoch kaum konkrete Hinweise, da keine Texte vorhanden sind. Insgesamt zeigt sich ein zufriedenes Besucherbild.
+      </p>
+    </div>
+
+    <!-- OPPORTUNITIES -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">🚀</span>Chancen &amp; Handlungsfelder</div>
+      <div class="section-subtitle">Konkrete Ansatzpunkte für Verbesserungen</div>
+      <div class="pill-row">
+        <span class="op-pill">Gäste gezielt zu ausführlicherem Feedback motivieren</span><span class="op-pill">Review-Antwortstrategie etablieren</span><span class="op-pill">Erlebnismomente hervorheben, um mehr inhaltliche Bewertungen zu fördern</span>
+      </div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">📝</span>Ausgewählte Kundenstimmen</div>
+      <div class="section-subtitle">Beispiele aus den aktuellen Bewertungen</div>
+      
+        <div class="review-card">
+          <div class="review-header">
+            <div><span class="stars">★ 5</span> <span class="review-author">Lord Wallner</span></div>
+            <div>21.07.2023</div>
+          </div>
+          <div class="review-text"></div>
+        </div>
+      
+        <div class="review-card">
+          <div class="review-header">
+            <div><span class="stars">★ 5</span> <span class="review-author">Sulaiman Mohammed</span></div>
+            <div>09.03.2020</div>
+          </div>
+          <div class="review-text"></div>
+        </div>
+      
+    </div>
+      <div class="footer">
+        © 2025 <a href="https://yourfeedback.solutions" target="_blank" rel="noopener noreferrer">Your Feedback Solutions</a>
+      </div>
+  </div>
+</body>
+</html>

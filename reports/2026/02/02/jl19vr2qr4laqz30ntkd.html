@@ -1,0 +1,638 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Review Snapshot Übersicht</title>
+  <style>
+  body {
+    margin: 0;
+    padding: 32px;
+    background: #f5f5f7;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    color: #111827;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto 40px;
+  }
+
+  /* Karten – „Flat + 3D-Border“ Variante, gut für PDF */
+  .card {
+    background: #ffffff;
+    border-radius: 24px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+
+  .card-section {
+    background: #ffffff;
+    border-radius: 18px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  /* Header mit leichtem Schatten */
+  .header-card {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 40%, #f97316 100%);
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    border: none;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.22);
+  }
+
+  .header-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .header-pill-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.18;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(255,255,255,0.7) 0, transparent 55%),
+      radial-gradient(circle at 100% 100%, rgba(255,255,255,0.4) 0, transparent 55%);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(15,23,42,0.35);
+  }
+
+  .header-icon-inner {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .header-star {
+    color: #ff7a64;         /* Branding-Farbe */
+    transform: translateY(-1px); /* nur Stern 1px nach oben */
+    display: inline-block;
+  }
+
+  .header-title {
+    font-size: 24px;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+
+  .header-subtitle {
+    font-size: 14px;
+    opacity: 0.92;
+  }
+
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.5);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #22c55e;
+  }
+
+  /* KPI Row – 3 Karten mit leicht farbiger Hinterlegung */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .kpi-card {
+    border-radius: 16px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 16px 18px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .kpi-card.rating {
+    background: #fefce8; /* leicht gelb */
+  }
+
+  .kpi-card.period {
+    background: #eff6ff; /* leicht blau */
+  }
+
+  .kpi-card.sentiment {
+    background: #f5f3ff; /* leicht lila */
+  }
+
+  .kpi-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .kpi-icon.rating { background:#fef3c7; color:#f59e0b; }
+  .kpi-icon.period { background:#e0f2fe; color:#0284c7; }
+  .kpi-icon.sentiment { background:#ede9fe; color:#a855f7; }
+
+  .kpi-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #6b7280;
+    letter-spacing: 0.06em;
+  }
+
+  .kpi-value {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .kpi-sub {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  /* Progress Bar (Sentiment) – wieder aktiv */
+  .progress-wrapper {
+    margin-top: 6px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    height: 8px;
+  }
+
+  .progress-inner {
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+    width: 0; /* wird per Inline-Style gesetzt */
+    max-width: 100%;
+  }
+
+  /* Section headings */
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .section-title span.icon {
+    margin-right: 6px;
+  }
+
+  .section-subtitle {
+    font-size: 12px;
+    color: #4b5563;
+    margin-bottom: 12px;
+    font-weight: 600; /* fett */
+  }
+
+  /* Reviewer Insights */
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+    gap: 12px;
+  }
+
+  .insight-box {
+    background: #f9fafb;
+    border-radius: 14px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 12px 14px;
+  }
+
+  .insight-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  .insight-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+  }
+
+  .insight-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .insight-list li {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .lang-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .lang-pill {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    color: #374151;
+  }
+
+  /* Key Themes / Opportunities Pills */
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .pill {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid rgba(79,70,229,0.2);
+  }
+
+  /* Positive / Improvement */
+  .columns-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+    gap: 16px;
+  }
+
+  .pos-card {
+    background: #ecfdf3;
+    border-radius: 18px;
+    border-top: 1px solid #bbf7d0;
+    border-left: 1px solid #bbf7d0;
+    border-right: 2px solid #4ade80;
+    border-bottom: 2px solid #4ade80;
+    padding: 16px 18px;
+  }
+
+  .neg-card {
+    background: #fef2f2;
+    border-radius: 18px;
+    border-top: 1px solid #fecaca;
+    border-left: 1px solid #fecaca;
+    border-right: 2px solid #f97373;
+    border-bottom: 2px solid #f97373;
+    padding: 16px 18px;
+  }
+
+    .list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+  }
+
+  .list li {
+    font-size: 13px;
+    padding: 6px 0;
+    display: flex;
+    align-items: center;      /* Mitte vertikal */
+    gap: 10px;
+  }
+
+  .list-bullet {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  /* grüne Punkte für Positive Aspekte */
+  .list-bullet.pos {
+    background: #22c55e;
+  }
+
+  /* rote Punkte für Negative Aspekte */
+  .list-bullet.neg {
+    background: #f97373;
+  }
+
+  /* Opportunities as pills */
+  .op-pill {
+    display: inline-block;
+    margin: 4px 6px 4px 0;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid rgba(79,70,229,0.25);
+  }
+
+  /* Reviews */
+  .review-card {
+    border-radius: 18px;
+    border-top: 1px solid #e5e7eb;
+    border-left: 1px solid #e5e7eb;
+    border-right: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    background: #f9fafb;
+  }
+
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .stars {
+    color: #f59e0b;
+    margin-right: 4px;
+  }
+
+  .review-author {
+    font-weight: 500;
+    color: #111827;
+  }
+
+  .review-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #111827;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 5px;
+  }
+
+  .footer a {
+    color: #4f46e5;
+    text-decoration: none;
+    font-size: 12px; 
+  }
+
+  .footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width:640px) {
+    body { padding:16px; }
+    .card, .card-section { padding:18px 16px; }
+    .header-top { flex-direction:column; align-items:flex-start; }
+    .kpi-row { grid-template-columns:1fr; }
+  }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <div class="card header-card">
+      <div class="header-pill-bg"></div>
+      <div class="header-inner">
+        <div class="header-top">
+          <div class="header-left">
+            <div class="header-icon">
+              <div class="header-icon-inner">
+                <span class="header-star">★</span>
+              </div>
+            </div>
+            <div>
+              <div class="header-title">Review Snapshot Übersicht</div>
+              <div class="header-subtitle">
+                Umfassende Analyse für Badehaus Benrath
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="badge-row">
+          <span class="badge">
+            <span class="badge-dot"></span>
+            <span></span>
+          </span>
+          <span class="badge">
+            🏷 <span>Schwimmbad</span>
+          </span>
+          <span class="badge">
+            🔍 <span>Quelle: Google Reviews</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI ROW -->
+    <div class="card-section">
+      <div class="kpi-row">
+        <div class="kpi-card rating">
+          <div class="kpi-icon rating">★</div>
+          <div class="kpi-text">
+            <div class="kpi-label">Durchschnittliche Bewertung</div>
+            <div class="kpi-value">3.9 / 5</div>
+            <div class="kpi-sub">239 Bewertungen insgesamt</div>
+          </div>
+        </div>
+
+        <div class="kpi-card period">
+          <div class="kpi-icon period">📅</div>
+          <div class="kpi-text">
+            <div class="kpi-label">Zeitraum</div>
+            <div class="kpi-value">Letzte 30 Tage</div>
+            <div class="kpi-sub">vorliegenden Reviews vom 02.01.2026 bis 31.01.2026</div>
+          </div>
+        </div>
+
+        <div class="kpi-card sentiment">
+          <div class="kpi-icon sentiment">📊</div>
+          <div class="kpi-text" style="width:100%;">
+            <div class="kpi-label">Gesamtstimmung</div>
+            <div class="kpi-value">Mixed</div>
+            <div class="kpi-sub">86% positiv</div>
+            <div class="progress-wrapper">
+              <div class="progress-inner" style="width:86%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVIEWER INSIGHTS -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">👤</span>Reviewer-Insights</div>
+      <div class="section-subtitle">Verständnis der Rezensenten</div>
+      <div class="insights-grid">
+        <div class="insight-box">
+          <div class="insight-label">Durchschnittliche Textlänge</div>
+          <div class="insight-value">Medium</div>
+        </div>
+        <div class="insight-box">
+          <div class="insight-label">Top Rezensenten-Typen</div>
+          <ul class="insight-list">
+            <li>Allgemeine Besucher</li><li>Familien</li>
+          </ul>
+        </div>
+        <div class="insight-box">
+          <div class="insight-label">Sprachen</div>
+          <div class="lang-pills">
+            <span class="lang-pill">Deutsch</span><span class="lang-pill">Englisch</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEY THEMES -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">💬</span>Kern-Themen</div>
+      <div class="section-subtitle">Am häufigsten erwähnte Aspekte</div>
+      <div class="pill-row">
+        <span class="pill">Service am Empfang/Kasse</span><span class="pill">Freundlichkeit &amp; Hilfsbereitschaft</span><span class="pill">Sauberkeit</span><span class="pill">Auslastung &amp; Andrang</span><span class="pill">Sauna- und Wellness-Angebot</span>
+      </div>
+    </div>
+
+    <!-- POSITIVE / IMPROVEMENT -->
+    <div class="card-section">
+      <div class="columns-2">
+        <div class="pos-card">
+          <div class="section-title">👍 Positive Aspekte</div>
+          <div class="section-subtitle">Was Gäste besonders schätzen</div>
+          <ul class="list">
+            <li><span class="list-bullet pos"></span><span>Sehr freundlicher und engagierter Service am Empfang</span></li><li><span class="list-bullet pos"></span><span>Kompetente Beratung und hilfreiche Tipps</span></li><li><span class="list-bullet pos"></span><span>Vielfältiges Angebot (u. a. Dampf- und Trockensauna)</span></li><li><span class="list-bullet pos"></span><span>Separater Bereich für Kinder</span></li><li><span class="list-bullet pos"></span><span>Ruhige Zonen zum Entspannen</span></li>
+          </ul>
+        </div>
+        <div class="neg-card">
+          <div class="section-title">👎 Verbesserungspotenziale</div>
+          <div class="section-subtitle">Ansätze zur Optimierung</div>
+          <ul class="list">
+            <li><span class="list-bullet neg"></span><span>Freundliche Begrüßung und respektvoller Umgang an der Kasse sicherstellen</span></li><li><span class="list-bullet neg"></span><span>Konsequenteres Durchsetzen der Ruhe-Regeln im Solebecken</span></li><li><span class="list-bullet neg"></span><span>Einheitliche Servicequalität über alle Mitarbeitenden hinweg</span></li><li><span class="list-bullet neg"></span><span>Besseres Handling von Engpässen/hoher Auslastung in Stoßzeiten</span></li><li><span class="list-bullet neg"></span><span>Sichtbarer und proaktiver Umgang mit Beschwerden/Feedback vor Ort</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOMER EXPERIENCE OVERVIEW -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">🧭</span>Customer-Experience-Überblick</div>
+      <div class="section-subtitle">Stimmungslage und wiederkehrende Muster</div>
+      <p style="font-size:13px; line-height:1.6; color:#111827;">
+        Die meisten Stimmen sind sehr positiv und heben Service, Sauberkeit sowie das vielseitige Angebot mit Sauna, Kinderbereich und Ruhezone hervor. Gleichzeitig gibt es deutliche Kritik an der Servicequalität an der Kasse und an fehlender Ruhe bzw. Aufsicht im Solebecken. Insgesamt wirkt das Erlebnis stark davon abhängig, welche Mitarbeitenden und wie voll es gerade ist.
+      </p>
+    </div>
+
+    <!-- OPPORTUNITIES -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">🚀</span>Chancen &amp; Handlungsfelder</div>
+      <div class="section-subtitle">Konkrete Ansatzpunkte für Verbesserungen</div>
+      <div class="pill-row">
+        <span class="op-pill">Kurzes Service-Basistraining (Begrüßung, Tonalität, Konflikt-/Deeskalation) speziell für Kasse/Empfang</span><span class="op-pill">Klare Ruhe-Regeln für Solebecken/Ruhebereiche kommunizieren (Beschilderung + aktive, regelmäßige Präsenz des Personals)</span><span class="op-pill">Ein einfaches „Sofort-Feedback“-Format vor Ort etablieren (z. B. QR-Code), damit Beschwerden zeitnah gelöst werden</span><span class="op-pill">Stoßzeiten-Management verbessern (Transparenz zur Auslastung, ggf. personelle Verstärkung zu Peaks)</span><span class="op-pill">Service-Recovery-Standard definieren (wie Mitarbeitende bei Unzufriedenheit reagieren und Lösungen anbieten)</span>
+      </div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div class="card-section">
+      <div class="section-title"><span class="icon">📝</span>Ausgewählte Kundenstimmen</div>
+      <div class="section-subtitle">Beispiele aus den aktuellen Bewertungen</div>
+      
+        <div class="review-card">
+          <div class="review-header">
+            <div><span class="stars">★ 5</span> <span class="review-author">Ismail Ismail</span></div>
+            <div>20.01.2026</div>
+          </div>
+          <div class="review-text">Ich war heute Abend im Benrather Schwimmbad und bin absolut begeistert vom Service! Ich hatte viele Fragen, und die Dame am Empfang Aufsicht hat sich unglaublich viel Zeit genommen. Sie war nicht nur super freundlich, sondern hat mir auch noch wertvolle Tipps gegeben. So eine kompetente und hilfsbereite Unterstützung findet man selten. Vielen Dank für den tollen Abend – ich komme definitiv gerne wieder</div>
+        </div>
+      
+        <div class="review-card">
+          <div class="review-header">
+            <div><span class="stars">★ 5</span> <span class="review-author">Mohammad Heidari</span></div>
+            <div>17.01.2026</div>
+          </div>
+          <div class="review-text">Has it all, steam and dry sauna, separate zone for kids, and a quiet area to chill. You should check it out. anytime of the year you'll still enjoy;)</div>
+        </div>
+      
+        <div class="review-card">
+          <div class="review-header">
+            <div><span class="stars">★ 1</span> <span class="review-author">R. Hölscher</span></div>
+            <div>02.01.2026</div>
+          </div>
+          <div class="review-text">Kundenservice sieht an der Kasse anders aus, sorry, aber die Mitarbeiterin von heute hat an dieser Stelle nichts suchen.  Kein Guten Tag,  nichts!!! Kein Respekt!!!! Und die Mitarbeiter im Schwimmbad kümmern sich überhaupt nicht um die Ruhe im Solebecken, eine einzige Katastrophe!!! Kunden Zufriedenheit ist ein Fremdwort!!!</div>
+        </div>
+      
+    </div>
+      <div class="footer">
+        <b>Eine automatisierte, monatliche Analyse erhalten Sie schon ab unserem "Starter"-Plan.</br><a href="https://yourfeedback.solutions/de/pricing" target="_blank">Probieren es kostenlos aus.</a></b></br></br></br>
+        © 2026 <a href="https://yourfeedback.solutions" target="_blank" rel="noopener noreferrer">Your Feedback Solutions</a>
+      </div>
+  </div>
+</body>
+</html>
